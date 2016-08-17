@@ -38,7 +38,8 @@ The application needs to be built with high-volume in mind:
 * The persistence layer may eventually contain millions of results. Searching through the results still needs to be effective.
 
 ## Implementation requirements
-* use Postgres as a database
-* use a Bootstrap based UI
-* use JSON as the data protocol for the API service
+* Use Postgres as a database
+* Use a Bootstrap based UI
+* Use JSON as the data protocol for the API service
 * The UI should access the service using AJAX and not using server-side calls.
+* Please supply specs for the service
