@@ -14,6 +14,7 @@ That should get you up and running, to run your local server run `rails s` in yo
 ## Objective
 Build an application that parses LinkedIn profiles, stores results in a structured manner in a persistent layer and allows to perform search on stored results.
 
+## Tasks
 ### Backend service
 Create a RESTful API containing 3 endpoints:
 * Adding a public LinkedIn profile
@@ -26,10 +27,9 @@ The service should parse the following fields from the public profile:
 * Current position
 * List of skills
 
-
 ### UI
 Create a UI that utilizes the above service. The UI should allow users to:
-* submit new profiles
+* submit new profiles by passing in a LinkedIn profile URL
 * submit searches (utilizing the service searching capabilities described above). Searches should either be by person name or by skill.
 
 ## Notes
