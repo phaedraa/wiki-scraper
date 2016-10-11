@@ -8,12 +8,12 @@ default: &default
 
 development:
   <<: *default
-  database: clutter_development
+  database: clutter_development_interview
 
 test:
   <<: *default
-  database: clutter_test
+  database: clutter_test_interview
 
 production:
   <<: *default
-  database: clutter
+  database: clutter_interview
