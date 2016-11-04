@@ -1,6 +1,11 @@
 # Rails Interview Project
 
-Mac: (setting up rails)
+Option 1 (Cloud 9):
+
+1. You will be invited to a cloud9 account, create a new workspace -> clone workspace -> rails-lab
+2. Everything should be already set up and good to go, and you have full access
+
+Option 2 (clone to your own computer):
 
 1. install brew if they don't have it (http://brew.sh/)
 2. `brew install rbenv`
