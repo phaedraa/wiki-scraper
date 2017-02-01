@@ -17,7 +17,7 @@ Option 2 (clone to your own computer):
 That should get you up and running, to run your local server run `rails s` in your terminal, with default settings that will let you access your app at `localhost:3000`
 
 ## Objective
-Build an application that (pseudo) summarizes events on a given day from Wikipedia. Each event should be persisted locally, such that subsequent requests for the same date will not make a request to Wikipedia.
+Build an application that (pseudo) summarizes events on a given day scraped from Wikipedia. Each event should be persisted locally, such that subsequent requests for the same date will not trigger a visit to Wikipedia.
 
 ### Parsing Details
  * Given a date in the past (>= 1/1/2000), the app will parse each outer bullet point as an event.  For example, on [Jan 1, 2010](https://en.wikipedia.org/wiki/Portal:Current_events/January_2010#2010_January_1), there would be 10 events. Each event would be based on the first link encountered within the bullet point that leads to a wikipedia entry. Each event is highlighted with a red underline:
@@ -46,6 +46,7 @@ The UI consists of a couple views that consumes the services above:
 The application needs to be built with high-volume in mind:
 * Assume that a lot of users will be viewing event summaries concurrently
 * The persistence layer may eventually contain millions of results. Searching through the results still needs to be effective.
+* Please do not use the Wikipedia API. Write a service to parse the DOM.
 
 ## Implementation requirements
 * Use Postgres as a database
