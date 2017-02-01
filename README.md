@@ -19,8 +19,10 @@ That should get you up and running, to run your local server run `rails s` in yo
 ## Objective
 Build an application that (pseudo) summarizes events on a given day from Wikipedia. Each event should be persisted locally, such that subsequent requests for the same date will not make a request to Wikipedia.
 
-## Parsing Details
- * Given a date in the past (>= 1/1/2000), the app will parse each outer bullet point as an event.  For example, on [Jan 1, 2010](https://en.wikipedia.org/wiki/Portal:Current_events/January_2016#2016_January_14), there would be 10 events. Each event would be based on the first link encountered within the bullet point.
+### Parsing Details
+ * Given a date in the past (>= 1/1/2000), the app will parse each outer bullet point as an event.  For example, on [Jan 1, 2010](https://en.wikipedia.org/wiki/Portal:Current_events/January_2010#2010_January_1), there would be 10 events. Each event would be based on the first link encountered within the bullet point that leads to a wikipedia entry. Each event is highlighted with a red underline:
+
+ ![wikipedia example image](https://s3.amazonaws.com/clutter-interview-assets/Portal_Current_events_January_2010_-_Wikipedia.png)
 
  * An event summary consists of the following fields:
    * title - same title as article
@@ -36,9 +38,9 @@ Create a RESTful API for:
   * SHOW returns all events associated with a given date
 
 ### UI
-The UI should allow users to:
-* [Events Summary Page] View all events for a given date >= 1/1/2000
-* [Dates Index Page] View an index page that lists all locally cached dates, which are linkable to the associated Event Summary Page
+The UI consists of a couple views that consumes the services above:
+* Events Summary Page - Allows user to view all events for a given date >= 1/1/2000
+* Dates Index Page - View an index page that lists all locally cached dates, which are linkable to the associated Event Summary Page
 
 ## Notes
 The application needs to be built with high-volume in mind:
