@@ -31,11 +31,9 @@ Build an application that (pseudo) summarizes events on a given day scraped from
 
 ## Tasks
 ### Backend service
-Create a RESTful API for:
-* Events - [CREATE, SHOW]
-* Dates - [INDEX, SHOW]
-  * INDEX returns all dates that are locally cached
-  * SHOW returns all events associated with a given date
+Create RESTful API endpoints to:
+  * return all events for a given date
+  * return all dates that have been cached locally
 
 ### UI
 The UI consists of a couple views that consumes the services above:
