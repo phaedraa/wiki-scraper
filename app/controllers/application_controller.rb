@@ -103,4 +103,23 @@ class ApplicationController < ActionController::Base
 
     return summary_stripped
   end
+
+  # not sure if Ruby String class uses a String builder... Trying
+  # to avoid making new string copies for length of the string times
+  def strip_citations_potentially_inefficient(summary)
+    summary_stripped = ''
+    str_len = summary.length
+    idx = 0
+    while idx < str_len
+      summary_stripped += summary[idx]
+      idx+=1
+      while summary[idx] == '['
+        while idx + 1 < str_len && summary[idx] != ']'
+          idx+=1
+        end
+        idx+=1
+      end
+    end
+    return summary_stripped
+  end
 end
