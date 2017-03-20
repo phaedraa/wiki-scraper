@@ -225,6 +225,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  autoprefixer-rails
   bootstrap-sass (~> 3.3.6)
   byebug
   coffee-rails (~> 4.1.0)
@@ -246,4 +247,4 @@ DEPENDENCIES
   web-console (~> 2.0)
 
 BUNDLED WITH
-   1.12.5
+   1.14.6
