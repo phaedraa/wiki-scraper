@@ -3,6 +3,7 @@ class DatesController < ApplicationController
   require 'nokogiri'
   require 'open-uri'
   require 'URI'
+  require 'Event'
   
   def index
     date = '2016-3-2'
@@ -35,8 +36,21 @@ class DatesController < ApplicationController
       data_to_log.push(getEventData(event.css('a')[0]))
     end
 
+    day = date.strftime('%s')
     #Cash this locally
-    @event_data = Hash[date.strftime('%s') => data_to_log]
+    #@event_data = Hash[date.strftime('%s') => data_to_log]
+    data_to_log.each do |events_data|
+      puts events_data
+      @events = Event.new(
+        day: date,
+        wiki_url: events_data[:wiki_url],
+        title: events_data[:title],
+        summary: events_data[:summary],
+        image_url: events_data[:image_url]
+      )
+      @events.save
+      # add some error handling for saving
+    end
   end
 
   def getEventData(anchor_image)
