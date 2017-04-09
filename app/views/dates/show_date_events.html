@@ -13,7 +13,7 @@
 <div class="col-md-6">
   <table class="table table-striped">
   <thead>
-    <th>Title</th>
+    <th>Event</th>
     <th>Summary</th>
     <th>Image</th>
   </thead>
@@ -22,7 +22,20 @@
     <tr>
       <td><%= link_to event.title, event.wiki_url%></td>
       <td><%= event.summary%></td>
-      <td><%= link_to 'Image', event.image_url%></td>
+      <td>
+        <%=
+          link_to 'Link', 
+          "https://en.wikipedia.org#{event.image_url}"
+        %>
+        <img
+          data-src="holder.js/200x200"
+          class="img-thumbnail"
+          alt="200x200"
+          style="width: 200px; height: 200px;"
+          src=<%= "https://en.wikipedia.org#{event.image_url}"%>
+          data-holder-rendered="true"
+        >
+      </td>
     </tr>
   <% end %>
 </table>
