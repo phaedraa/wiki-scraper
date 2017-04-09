@@ -1,0 +1,28 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <b class="navbar-brand">Wiki Scraper</b>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1><%= "All Wikipedia Logged Events for #{@event_date}" %></h1>
+</div>
+
+<div class="col-md-6">
+  <table class="table table-striped">
+  <thead>
+    <th>Title</th>
+    <th>Summary</th>
+    <th>Image</th>
+  </thead>
+ 
+  <% @events.each do |event| %>
+    <tr>
+      <td><%= link_to event.title, event.wiki_url%></td>
+      <td><%= event.summary%></td>
+      <td><%= link_to 'Image', event.image_url%></td>
+    </tr>
+  <% end %>
+</table>

@@ -1,8 +1,51 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <b class="navbar-brand">Wiki Scraper</b>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>Pick a Date</h1>
+</div>
+<div class="input-group date" data-provide="datepicker">
+    <button
+      type="button"
+      class="btn btn-lg btn-info form-control" data-date-format="mm/dd/yyyy">
+      Pick a Date
+    </button>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("#dateField").datepicker({
+          dateFormat: "yyyy-mm-dd"
+        }).on('changeDate', function(ev){
+          console.log('eve', ev);
+          alert(ev.date.valueOf());
+          $.ajax({ 
+            type: 'GET',
+            url: 'date/' + ev.date.valueOf(),
+          })
+        });
+      })
+    </script>
+    <div class="input-group-addon">
+        <span class="glyphicon glyphicon-th"></span>
+    </div>
+</div>
+
+<div class="page-header">
+  <h1>Stored Dates</h1>
+</div>
+ 
 <table>
-<tr>
-  <th>Title</th>
-  <th>Image</th>
-  <th>Page</th>
-  <th>Summary</th>
-</tr>
- </table>
+  <tr>
+    <th><i>By order in which they were stored.</i></th>
+  </tr>
+ 
+  <% @stored_dates.each do |day| %>
+    <tr>
+      <td><%= link_to day.strftime('%b %d, %Y'), show_date_events_path(day)%></td>
+    </tr>
+  <% end %>
+</table>
