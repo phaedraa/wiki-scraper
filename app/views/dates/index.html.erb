@@ -12,10 +12,12 @@
 <div class="input-group date" data-provide="datepicker">
     <button
       type="button"
-      class="btn btn-lg btn-info form-control" data-date-format="mm/dd/yyyy">
+      class="btn btn-lg btn-info form-control"
+      data-date-format="mm/dd/yyyy">
       Pick a Date
     </button>
-    <script type="text/javascript">
+    <!--<script src="jquery-3.2.0.min.js">-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js">
       jQuery(document).ready(function($) {
         $("#dateField").datepicker({
           dateFormat: "yyyy-mm-dd"

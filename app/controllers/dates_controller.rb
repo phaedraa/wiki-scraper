@@ -10,10 +10,10 @@ class DatesController < ApplicationController
     day = Date.parse(params[:date])
     @event_date = day.strftime('%B %d, %Y')
     @events = Event.where(:day => day)
-    if @events.length == 0
+    #if @events.length == 0
       fetch_and_store_date_events(day)
       @events = Event.where(:day => day)
-    end
+    #end
   end
 
   def index
@@ -37,12 +37,6 @@ class DatesController < ApplicationController
 
     # TODO: Handle case if data doesn't exists/no events for this date
     table = doc.xpath("//div[@id='#{div_id}']").first.next_element
-    #next_date = date.next
-    #next_div_id = "#{next_date.year}_#{Date::MONTHNAMES[next_date.month]}_#{next_date.day}"
-    #tables = doc.css('table.vevent')
-    #first_table = tables[0]
-    #title_header = first_table.css('span.summary')
-    #title_text = title_header[0].text
 
     content = table.css('td.description')
     events = content.css('li')
@@ -63,7 +57,7 @@ class DatesController < ApplicationController
         summary: events_data[:summary],
         image_url: events_data[:image_url]
       )
-      @event.save
+      #@event.save
       # add some error handling for saving
     end
 
@@ -74,15 +68,34 @@ class DatesController < ApplicationController
     url = anchor_image['href']
     title = anchor_image.text
     summary = ''
+    image_file = ''
     image_url = ''
     wiki_url = "https://en.wikipedia.org#{url}"
     begin
       first_event = Nokogiri::HTML(open("https://en.wikipedia.org#{url}"))
       content = first_event.css('div.mw-body-content').css('div.mw-content-ltr')
       title = first_event.css('h1.firstHeading').text
-      image_box = content.css('table.infobox').css('a.image')
-      image_url = image_box.length < 1 ? '' : image_box[0]['href']
-      
+      table_infobox = content.css('table.infobox')
+      if table_infobox.length < 1
+        image_box = content.css('img').first
+        image_url = "https:" + image_box['src']
+      else
+        image_box = table_infobox.css('a.image')
+        image_url = image_box.length < 1 ? '' : "https:" + image_box.first.css('img')[0]['src']
+      end
+      puts "IMAGE URL"
+      puts image_url
+      #if image_file.length != 0
+      #  image_page = Nokogiri::HTML(open("https://en.wikipedia.org#{image_file}"))
+      #  # decode URI and remove _ to utilize as image ID
+      #  # image_id = URI.decode(image_file).gsub('_', ' ');
+      #  # image_id = image_id.slice(6, image_id.length) # Remove the '/wiki/' prefix
+      #  image_path = image_page.xpath("//div[@class='fullImageLink']").first.css('img').first['src']
+      #  image_url = "https:#{image_path}"
+      #  puts image_url
+      #  puts "FOUND IMAGE"
+      #  #image_url = image['src']
+      #end
       paragraphs = content.xpath(
         '//p[count(preceding-sibling::h2) = 0 and count(preceding-sibling::table) > 0 and count(following-sibling::div) > 0]'
       )
@@ -91,8 +104,8 @@ class DatesController < ApplicationController
       end
     rescue OpenURI::HTTPError => e
       print "URI: #{url} no longer exists: " + e.to_s
-    rescue
-      print "Not an HTTPError"
+    rescue Exception => e
+      print "Unclassified Error: " + e.to_s
     end
 
     summary_stripped = strip_citations(summary)
@@ -103,6 +116,10 @@ class DatesController < ApplicationController
       :summary => summary_stripped,
       :image_url => image_url
     }
+  end
+
+  def default_image
+    return "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPjwhLS0KU291cmNlIFVSTDogaG9sZGVyLmpzLzIwMHgyMDAKQ3JlYXRlZCB3aXRoIEhvbGRlci5qcyAyLjYuMC4KTGVhcm4gbW9yZSBhdCBodHRwOi8vaG9sZGVyanMuY29tCihjKSAyMDEyLTIwMTUgSXZhbiBNYWxvcGluc2t5IC0gaHR0cDovL2ltc2t5LmNvCi0tPjxkZWZzPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+PCFbQ0RBVEFbI2hvbGRlcl8xNWI1NDFjN2M3NCB0ZXh0IHsgZmlsbDojQUFBQUFBO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1mYW1pbHk6QXJpYWwsIEhlbHZldGljYSwgT3BlbiBTYW5zLCBzYW5zLXNlcmlmLCBtb25vc3BhY2U7Zm9udC1zaXplOjEwcHQgfSBdXT48L3N0eWxlPjwvZGVmcz48ZyBpZD0iaG9sZGVyXzE1YjU0MWM3Yzc0Ij48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0VFRUVFRSIvPjxnPjx0ZXh0IHg9Ijc0LjA1NDY4NzUiIHk9IjEwNC41Ij4yMDB4MjAwPC90ZXh0PjwvZz48L2c+PC9zdmc+"
   end
 
   def strip_citations(summary)
