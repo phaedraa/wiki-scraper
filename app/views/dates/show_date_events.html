@@ -26,18 +26,20 @@
       </thead>
     <% @events.each do |event| %>
       <tr>
-        <td><%= link_to event.title, event.wiki_url%></td>
-        <td><%= event.summary%></td>
+        <td><%= link_to event[:title], event[:wiki_url]%></td>
+        <td><%= event[:summary]%></td>
         <td>
-          <%= link_to 'Link', event.image_url%>
-            <img
-              data-src="holder.js/400x400"
-              class="img-thumbnail"
-              alt="400x400"
-              style="width: 400px; height: 400px;"
-              src=<%= event.image_url%>
-              data-holder-rendered="true"
-            >
+          <% if event[:image_url].length > 0 %>
+            <%= link_to 'Source', event[:image_url]%>
+          <% end %>
+          <img
+            data-src="holder.js/400x400"
+            class="img-thumbnail"
+            alt="400x400"
+            style="width: 400px; height: 400px;"
+            src=<%= event[:image_url]%>
+            data-holder-rendered="true"
+          >
         </td>
       </tr>
     <% end %>

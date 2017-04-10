@@ -1,33 +1,61 @@
-class DatesController < ApplicationController
   require 'Date'
   require 'nokogiri'
   require 'open-uri'
   require 'URI'
-  require 'Event'
-  
-  def show_date_events
-    #date = '2016-3-4'
-    day = Date.parse(params[:date])
-    @event_date = day.strftime('%B %d, %Y')
-    @events = Event.where(:day => day)
-    if @events.length == 0
-      fetch_and_store_date_events(day)
-      @events = Event.where(:day => day)
+def strip_citations(summary)
+    if summary.length == 0
+      return ''
     end
-  end
-
-  def index
-    @stored_dates = Event.uniq.pluck(:day)
-  end
-
-  def fetch_and_store_date_events(date)
-    temp_delete = Event.where(day: date)
-    temp_delete.each do |delete_event|
-      Event.find(delete_event[:id]).destroy
+    idx_to_strip = []
+    pair = []
+    (0..(summary.length - 1)).each do |idx|
+      if summary[idx] == '[' || summary[idx] == ']'
+        if pair.length == 2
+          idx_to_strip.push(pair)
+          pair = [idx]
+        else
+          pair.push(idx)
+        end
+      end 
     end
-    #date = '2016-3-2'
+
+    if pair.length == 2
+      idx_to_strip.push(pair)
+    end
+
+    j = 0
+    summary_stripped = ''
+    puts "INDEXES"
+    puts idx_to_strip
+    idx_to_strip.each do |pair|
+      if j < pair[0]
+        summary_stripped += summary[j..pair[0]-1]
+      end
+      # If values between the brackets are not integers, keep them
+      bracket_val = summary[pair[0] + 1, pair[1] - pair[0]]
+      if /\A\d+\z/.match(bracket_val)
+        summary_stripped += summary[pair[0], pair[1]]
+      end
+      j = pair[1]+1
+    end
+
+    if j < summary.length
+      summary_stripped += summary[j..-1]
+    end
+
+
+    puts "SUMMARY"
+    puts summary_stripped
+    return summary_stripped
+end
+#stri="Human rights defenders or human rights activists are people who, individually or with others, act to promote or protect some variation of human rights.[333]"
+#puts strip_citations(stri)
+
+
+  def fetch_and_store_date_events
     #debugger
-    #date = Date.parse(date)
+    date = Date.parse('2016-03-09')
+    puts date
     month = Date::MONTHNAMES[date.mon]
     year = date.year
     day = date.day
@@ -63,22 +91,20 @@ class DatesController < ApplicationController
         summary: events_data[:summary],
         image_url: events_data[:image_url]
       )
-      @event.save
       # add some error handling for saving
     end
 
     #return data_to_log
   end
 
-  def getEventData(anchor_image, date)
-    url = anchor_image['href']
-    title = anchor_image.text
+  def getEventData
+    #title = anchor_image.text
     summary = ''
     image_file = ''
     image_url = ''
-    wiki_url = "https://en.wikipedia.org#{url}"
+    wiki_url = "https://en.wikipedia.org/wiki/Major_airlines_of_the_United_States"
     begin
-      first_event = Nokogiri::HTML(open("https://en.wikipedia.org#{url}"))
+      first_event = Nokogiri::HTML(open(wiki_url))
       content = first_event.css('div.mw-body-content').css('div.mw-content-ltr')
       title = first_event.css('h1.firstHeading').text
       table_infobox = content.css('table.infobox')
@@ -96,6 +122,8 @@ class DatesController < ApplicationController
       )
       # Case 2 where images exist
       if paragraphs.length < 1
+        #thumb tmulti tright
+        #img_div = content.xpath('.//div[@class="thumb tright"]').first
         img_div = content.xpath('.//div[@class="thumb tright" or @class="thumb tmulti tright"]').first
         # There are no images and no table preceding the text, so assume
         # that the first paragraph elements we find contain the desired
@@ -108,6 +136,8 @@ class DatesController < ApplicationController
           summary += node.text
           node = node.next_element
         end
+        puts "SUMMARY"
+        puts summary
       else
         paragraphs.each do |paragraph|
           summary += paragraph.text
@@ -130,65 +160,4 @@ class DatesController < ApplicationController
     }
   end
 
-  def strip_citations(summary)
-    if summary.length == 0
-      return ''
-    end
-
-    idx_to_strip = []
-    pair = []
-    (0..(summary.length - 1)).each do |idx|
-      if summary[idx] == '[' || summary[idx] == ']'
-        if pair.length == 2
-          idx_to_strip.push(pair)
-          pair = [idx]
-        else
-          pair.push(idx)
-        end
-      end 
-    end
-
-    if pair.length == 2
-      idx_to_strip.push(pair)
-    end
-
-    j = 0
-    summary_stripped = ''
-    idx_to_strip.each do |pair|
-      if j < pair[0]
-        summary_stripped += summary[j..pair[0]-1]
-      end
-      # If values between the brackets are not integers, keep them
-      bracket_val = summary[pair[0] + 1, pair[1] - pair[0]]
-      if /\A\d+\z/.match(bracket_val)
-        summary_stripped += summary[pair[0], pair[1]]
-      end
-      j = pair[1]+1
-    end
-
-    if j < summary.length
-      summary_stripped += summary[j..-1]
-    end
-
-    return summary_stripped
-  end
-
-  # not sure if Ruby String class uses a String builder... Trying
-  # to avoid making new string copies for length of the string times
-  def strip_citations_potentially_inefficient(summary)
-    summary_stripped = ''
-    str_len = summary.length
-    idx = 0
-    while idx < str_len
-      summary_stripped += summary[idx]
-      idx+=1
-      while summary[idx] == '['
-        while idx + 1 < str_len && summary[idx] != ']'
-          idx+=1
-        end
-        idx+=1
-      end
-    end
-    return summary_stripped
-  end
-end
+puts getEventData
