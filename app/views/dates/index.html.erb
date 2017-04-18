@@ -9,33 +9,16 @@
 <div class="page-header">
   <h1>Pick a Date</h1>
 </div>
-<div class="input-group date" data-provide="datepicker">
+<div>
+    <input type="text" id="datepicker-date" data-provide='datepicker' >
     <button
       type="button"
-      class="btn btn-lg btn-info form-control"
+      class="btn btn-info"
+      id="datepicker-button"
       data-date-format="mm/dd/yyyy">
       Pick a Date
     </button>
-    <!--<script src="jquery-3.2.0.min.js">-->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js">
-      jQuery(document).ready(function($) {
-        $("#dateField").datepicker({
-          dateFormat: "yyyy-mm-dd"
-        }).on('changeDate', function(ev){
-          console.log('eve', ev);
-          alert(ev.date.valueOf());
-          $.ajax({ 
-            type: 'GET',
-            url: 'date/' + ev.date.valueOf(),
-          })
-        });
-      })
-    </script>
-    <div class="input-group-addon">
-        <span class="glyphicon glyphicon-th"></span>
-    </div>
 </div>
-
 <div class="page-header">
   <h1>Stored Dates</h1>
   <h5>In descending order.</h5>
@@ -48,3 +31,12 @@
     </tr>
   <% end %>
 </table>
+<script type="text/javascript">
+  $(document).ready(function(){
+    function redirect() {
+      var date = $('#datepicker-date');
+      
+    }
+    $('#datepicker-button').click(redirect());
+  });
+</script>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>Bootstrap4</title>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
     <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
     <%= csrf_meta_tags %>
   </head>
@@ -12,6 +13,5 @@
     <div class="container">
       <%= yield %>
     </div>
-    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
   </body>
 </html>
