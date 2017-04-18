@@ -6,29 +6,26 @@ class DatesController < ApplicationController
   require 'Event'
   
   def show_date_events
-    #date = '2016-3-4'
     day = Date.parse(params[:date])
-    #@event_date = day.strftime('%B %d, %Y')
+    @event_date = day.strftime('%B %d, %Y')
     events = WikiDate.where(:day => day)
     if events.length == 0
       fetch_and_store_date_events(day)
       events = WikiDate.where(:day => day)
     end
-    @events_data = Event.find(events).map(&:title)
+    titles = events.map{|row| row.event}
+    @events_data = Event.where(title: titles)
   end
 
   def index
-    @stored_dates = WikiDate.uniq.pluck(:day)
+    @stored_dates = WikiDate.uniq.pluck(:day).sort_by{|row| -1*row.day}
   end
 
   def fetch_and_store_date_events(date)
-    temp_delete = Event.where(day: date)
-    temp_delete.each do |delete_event|
-      Event.find(delete_event[:id]).destroy
-    end
-    #date = '2016-3-2'
-    #debugger
-    #date = Date.parse(date)
+    #temp_delete = Event.where(day: date)
+    #temp_delete.each do |delete_event|
+    #  Event.find(delete_event[:id]).destroy
+    #end
     month_num = date.mon
     month = Date::MONTHNAMES[month_num]
     year = date.year
@@ -49,18 +46,17 @@ class DatesController < ApplicationController
 
     data_to_log = []
     events.each do |event|
-      data_to_log.push(getEventData(event.css('a')[0], date))
+      data_to_log.push(getEventData(event.css('a')[0]))
     end
 
     day = date.strftime('%s')
     # TODO: create data first, then save
 
     data_to_log.each do |events_data|
-      #puts events_data
       title = events_data[:title]
       @wikidate = WikiDate.new(
         day: date,
-        title: title,
+        event: title,
       )
       @wikidate.save
 
@@ -200,11 +196,10 @@ class DatesController < ApplicationController
     while idx < str_len
       summary_stripped += summary[idx]
       idx+=1
-      while summary[idx] == '['
-        while idx + 1 < str_len && summary[idx] != ']'
+      if summary[idx] == '['
+        while idx < str_len && summary[idx] != ']'
           idx+=1
         end
-        idx+=1
       end
     end
     return summary_stripped

@@ -38,13 +38,10 @@
 
 <div class="page-header">
   <h1>Stored Dates</h1>
+  <h5>In descending order.</h5>
 </div>
  
 <table>
-  <tr>
-    <th><i>By order in which they were stored.</i></th>
-  </tr>
- 
   <% @stored_dates.each do |day| %>
     <tr>
       <td><%= link_to day.strftime('%b %d, %Y'), show_date_events_path(day)%></td>

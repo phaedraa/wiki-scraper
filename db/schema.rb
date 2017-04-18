@@ -17,7 +17,6 @@ ActiveRecord::Schema.define(version: 20170418002236) do
   enable_extension "plpgsql"
 
   create_table "events", force: :cascade do |t|
-    t.date     "day",        null: false
     t.string   "wiki_url",   null: false
     t.string   "title",      null: false
     t.text     "summary",    null: false
@@ -26,11 +25,13 @@ ActiveRecord::Schema.define(version: 20170418002236) do
     t.datetime "updated_at", null: false
   end
 
-  add_index "events", ["day"], name: "index_events_on_day", using: :btree
+  add_index "events", ["title"], name: "index_events_on_title", using: :btree
 
   create_table "wiki_dates", force: :cascade do |t|
     t.date   "day",   null: false
     t.string "event", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   add_index "wiki_dates", ["day"], name: "index_wiki_dates_on_day", using: :btree
