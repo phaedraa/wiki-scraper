@@ -11,7 +11,7 @@
 </div>
 
 <div class="container-fluid">
- <% if @events.length == 0 %>
+ <% if @events_data.length == 0 %>
     <div class="alert alert-info" role="alert">
       <strong>Hey there!</strong>
       No Wiki data has been found for this date!
@@ -24,7 +24,7 @@
         <th class="col-xs-6">Summary</th>
         <th class="col-xs-3">Image</th>
       </thead>
-    <% @events.each do |event| %>
+    <% @events_data.each do |event| %>
       <tr>
         <td><%= link_to event[:title], event[:wiki_url]%></td>
         <td><%= event[:summary]%></td>
