@@ -15,7 +15,7 @@
       type="button"
       class="btn btn-info"
       id="datepicker-button"
-      data-date-format="mm/dd/yyyy">
+      onclick="redirect()">
       Pick a Date
     </button>
 </div>
@@ -31,12 +31,15 @@
     </tr>
   <% end %>
 </table>
-<script type="text/javascript">
-  $(document).ready(function(){
+<script>
     function redirect() {
-      var date = $('#datepicker-date');
-      
+      var date = $('#datepicker-date').datepicker().val();
+      if (date && date.length > 0) {
+        var res = date.split('/');
+        var date = res[2] + '-' + res[0] + '-' + res[1];
+        window.location.href = "http://localhost:3000/date/" + date;
+      } else {
+        alert('Choose a date');
+      }
     }
-    $('#datepicker-button').click(redirect());
-  });
 </script>

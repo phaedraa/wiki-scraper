@@ -18,7 +18,7 @@ class DatesController < ApplicationController
   end
 
   def index
-    @stored_dates = WikiDate.uniq.pluck(:day).sort_by{|row| -1*row.day}
+    @stored_dates = WikiDate.uniq.pluck(:day).sort{|row| row.day}
   end
 
   def fetch_and_store_date_events(date)
@@ -38,9 +38,14 @@ class DatesController < ApplicationController
     doc = Nokogiri::HTML(open("https://en.wikipedia.org/wiki/Portal:Current_events/#{date_url}"))
     div_id = "#{year}_#{month}_#{day < 10 ? '0' : ''}#{day}"
 
-    # TODO: Handle case if data doesn't exists/no events for this date
-    table = doc.xpath("//div[@id='#{div_id}']").first.next_element
+    table = doc.xpath("//div[@id='#{div_id}']").first
+    # If table div for this date doesn't exist, assume no wiki data for
+    # this date exists. As such, don't store empty data in table.
+    if !table
+      return []
+    end
 
+    table = table.next_element
     content = table.css('td.description')
     events = content.css('li')
 
