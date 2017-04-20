@@ -8,6 +8,7 @@ class DatesController < ApplicationController
   def show_date_events
     day = Date.parse(params[:date])
     @event_date = day.strftime('%B %d, %Y')
+    delete_data(day)
     events = WikiDate.where(:day => day)
     if events.length == 0
       fetch_and_store_date_events(day)
@@ -21,11 +22,21 @@ class DatesController < ApplicationController
     @stored_dates = WikiDate.uniq.pluck(:day).sort{|row| row.day}
   end
 
+  def delete_data(date)
+    events = WikiDate.where(:day => date)
+    titles = events.map{|row| row.event}
+    events_data = Event.where(title: titles)
+    events_data.each do |delete_event|
+      Event.find(delete_event[:id]).destroy
+    end
+
+    temp_delete = WikiDate.where(day: date)
+    temp_delete.each do |delete_event|
+      WikiDate.find(delete_event[:id]).destroy
+    end
+  end
+
   def fetch_and_store_date_events(date)
-    #temp_delete = Event.where(day: date)
-    #temp_delete.each do |delete_event|
-    #  Event.find(delete_event[:id]).destroy
-    #end
     month_num = date.mon
     month = Date::MONTHNAMES[month_num]
     year = date.year
@@ -35,28 +46,14 @@ class DatesController < ApplicationController
     end
 
     date_url = "#{month}_#{year}" + "#" + "#{year}_#{month}_#{day}"
-    doc = Nokogiri::HTML(open("https://en.wikipedia.org/wiki/Portal:Current_events/#{date_url}"))
-    div_id = "#{year}_#{month}_#{day < 10 ? '0' : ''}#{day}"
+    date_div_id = "#{year}_#{month}_#{day < 10 ? '0' : ''}#{day}"
+    
+    data_to_log = get_data_to_log(date_url, date_div_id)
+    log_new_events_data(data_to_log, date)
+    #day = date.strftime('%s')
+  end
 
-    table = doc.xpath("//div[@id='#{div_id}']").first
-    # If table div for this date doesn't exist, assume no wiki data for
-    # this date exists. As such, don't store empty data in table.
-    if !table
-      return []
-    end
-
-    table = table.next_element
-    content = table.css('td.description')
-    events = content.css('li')
-
-    data_to_log = []
-    events.each do |event|
-      data_to_log.push(getEventData(event.css('a')[0]))
-    end
-
-    day = date.strftime('%s')
-    # TODO: create data first, then save
-
+  def log_new_events_data(data_to_log, date)
     data_to_log.each do |events_data|
       title = events_data[:title]
       @wikidate = WikiDate.new(
@@ -64,7 +61,7 @@ class DatesController < ApplicationController
         event: title,
       )
       @wikidate.save
-
+ 
       if (Event.where(:title => title)).length < 1
         @event = Event.new(
           title: title,
@@ -74,139 +71,192 @@ class DatesController < ApplicationController
         )
         @event.save
       end
-      # add some error handling for saving
     end
-
-    #return data_to_log
   end
 
-  def getEventData(anchor_image)
-    url = anchor_image['href']
-    title = anchor_image.text
-    summary = ''
-    image_file = ''
-    image_url = ''
-    wiki_url = "https://en.wikipedia.org#{url}"
-    begin
-      first_event = Nokogiri::HTML(open("https://en.wikipedia.org#{url}"))
-      content = first_event.css('div.mw-body-content').css('div.mw-content-ltr')
-      title = first_event.css('h1.firstHeading').text
-      table_infobox = content.css('table.infobox')
-      if table_infobox.length < 1
-        image_box = content.css('img').first || first_event.css('img').first
-        image_url = "https:" + image_box['src']
-      else
-        image_box = table_infobox.css('a.image')
-        image_url = image_box.length < 1 ? '' : "https:" + image_box.first.css('img')[0]['src']
-      end
+  def get_data_to_log(date_url, date_div_id)
+    doc = Nokogiri::HTML(open("https://en.wikipedia.org/wiki/Portal:Current_events/#{date_url}"))
+    table = doc.xpath("//div[@id='#{date_div_id}']").first
+    # If table div for this date doesn't exist, assume no wiki data for
+    # this date exists. As such, don't store empty data in table.
+    if !table
+      return []
+    end
+    
+    table = table.next_element
+    content = table.css('td.description')
+    events = content.css('li')
 
-      # Case 1 where table exists before element (seems most common)
-      paragraphs = content.xpath(
-        '//p[count(preceding-sibling::h2) = 0 and count(preceding-sibling::table) > 0 and count(following-sibling::div) > 0]'
-      )
-      # Case 2 where images exist
-      if paragraphs.length < 1
-        img_div = content.xpath('.//div[@class="thumb tright" or @class="thumb tmulti tright"]').first
-        # There are no images and no table preceding the text, so assume
-        # that the first paragraph elements we find contain the desired
-        # text. Grab until we exit a series of p's.
-        node = img_div == nil ? content.css('p').first : img_div
-        while node.name != "p" do
-          node = node.next_element
-        end
-        while node.name == "p" or node.name == "b" do
-          summary += node.text
-          node = node.next_element
-        end
-      else
-        paragraphs.each do |paragraph|
-          summary += paragraph.text
+    data_to_log = []
+    events.each do |event|
+      article_anchor = event.css('a')[0]
+      if article_anchor != nil
+        # article_anchor_url is of format 'wiki/SOME_NAME'
+        wiki_url = "https://en.wikipedia.org#{article_anchor['href']}"
+        dom = get_dom(wiki_url)
+        if dom != nil
+          data_to_log.push(get_event_data(dom, wiki_url))
         end
       end
-      
-    rescue OpenURI::HTTPError => e
-      print "URI: #{url} no longer exists: " + e.to_s
-    rescue Exception => e
-      print "Unclassified Error: " + e.to_s
     end
 
-    summary_stripped = strip_citations(summary)
+    return data_to_log
+  end
 
+  def get_dom(wiki_url)
+    begin
+      dom = Nokogiri::HTML(open(wiki_url))
+    rescue OpenURI::HTTPError => e
+      print "URI: #{wiki_url} no longer exists: " + e.to_s
+      return nil
+    rescue Exception => e
+      print "Unclassified Error: " + e.to_s
+      return nil
+    end
+  
+    return dom
+  end
+
+  def get_event_data(dom, wiki_url)
+    content_body = dom.css('div.mw-body-content').css('div.mw-content-ltr')
+    image_url = get_image_url(content_body)
+    summary = get_summary(content_body)
+    title = dom.css('h1.firstHeading').text
+    puts "*********************************"
+    if title == nil || title.length < 1
+      raise Error, 'Unable to find title in Wiki article: #{wiki_url}'
+    end
+  
     return {
       :wiki_url => wiki_url,
-      :title => title == nil || title.length < 1 ? '' : title,
-      :summary => summary_stripped,
+      :title => title,
+      :summary => summary,
       :image_url => image_url
     }
   end
 
+  # This function accomplishes two primary feats:
+  # 1) Balancing the brackets such that we don't have lone brackets
+  # 2) If a balanced bracket pair exists, and it's content is a
+  #    digit between 1-4 characters, then it will be excluded
   def strip_citations(summary)
-    if summary.length == 0
-      return ''
-    end
-
-    idx_to_strip = []
-    pair = []
-    (0..(summary.length - 1)).each do |idx|
-      if summary[idx] == '[' || summary[idx] == ']'
-        if pair.length == 2
-          # Validate pairs create a [] set. There should be no nested
-          # brackets. Ignore stripping of pairs which don't fit citation
-          # criteria.
-          if summary[pair[0]] != '[' && summary[idx] != ']'
-            pair = []
+      if summary.length < 1
+        raise Error, 'No summary text found'
+      end
+      
+      puts "SUMMARY: "
+      puts summary
+      left_brackets = [];
+      summary_len = summary.length
+      idx = 0
+      while idx < summary_len
+        if summary[idx] == '['
+          left_brackets.push(idx);
+        elsif summary[idx] == ']'
+          left_idx = left_brackets.pop
+          if left_idx != nil
+            # If values between brackets are ints or in format of word+int (e.g. 'note 9'),
+            # remove content and surrounding brackets.
+            # Only check for integers <= 9,999 as
+            # it's unlikely we'll ever have a citation which exits such a limit
+            if idx - left_idx == 1 ||
+              /[A-Za-z]*\s*[0-9]{1,4}$/.match(summary[left_idx + 1, idx - left_idx - 1])
+              while left_idx <= idx
+                summary[left_idx] = "*"
+                left_idx += 1
+              end
+            end
           else
-            idx_to_strip.push(pair)
-            pair = [idx]
+            summary[idx] = "*"
           end
-        else
-          pair.push(idx)
         end
-      end 
-    end
-
-    if pair.length == 2
-      idx_to_strip.push(pair)
-    end
-
-    j = 0
-    summary_stripped = ''
-    idx_to_strip.each do |pair|
-      if j < pair[0]
-        summary_stripped += summary[j..pair[0]-1]
+        idx += 1
       end
-      # If values between the brackets are not integers, keep them
-      bracket_val = summary[pair[0] + 1, pair[1] - pair[0]]
-      if /\A\d+\z/.match(bracket_val)
-        summary_stripped += summary[pair[0], pair[1]]
+  
+      # Set all loner left brackets to be "*"
+      left_bracket_to_remove = left_brackets.pop
+      while left_bracket_to_remove != nil
+        summary[left_bracket_to_remove] = "*"
+        left_bracket_to_remove = left_brackets.pop
       end
-      j = pair[1]+1
-    end
-
-    if j < summary.length
-      summary_stripped += summary[j..-1]
-    end
-
-    return summary_stripped
+  
+      # Replace all "*"'s with empty spaces to filter out desired content.
+      return summary.gsub("*", "")
   end
-
-  # not sure if Ruby String class uses a String builder... Trying
-  # to avoid making new string copies for length of the string times.
-  # This is also O(n*m), where m is the sum of the length of all bracket
-  # pairs and their contents.
-  def strip_citations_potentially_inefficient(summary)
-    summary_stripped = ''
-    str_len = summary.length
-    idx = 0
-    while idx < str_len
-      summary_stripped += summary[idx]
-      idx+=1
-      if summary[idx] == '['
-        while idx < str_len && summary[idx] != ']'
-          idx+=1
-        end
+  
+  def get_image_url(content_body)
+    #table_infobox = nil
+    #if table_infobox == nil || table_infobox.length < 1
+    #  image_box = content_body.css('div.thumbinner').css('img').first ||
+    #    content_body.css('table.vertical-navbox').css('img').first
+    #  if image_box == nil
+    #    plainlinks_table = content_body.css('table.plainlinks')
+    #    next_element = plainlinks_table.next_element rescue nil
+    #    image_box = next_element == nil ? nil : next_element.css('img').first
+    #    if image_box == nil
+    #      table_infobox = content_body.css('table.infobox')
+    #      image_box = table_infobox.css('a.image')
+    #    end
+    #  end
+    #  
+    #  if image_box != nil
+    #    return 'https:' + image_box['src']
+    #  else
+    #    return ''
+    #  end
+    #end
+    #  
+    #image_box = table_infobox.css('a.image')
+    #return image_box.length < 1 ? '' : 'https:' + image_box.first.css('img')[0]['src']
+    image_box = content_body.css('div.thumbinner').css('img')
+    if image_box == nil || image_box.length < 1
+      image_box = content_body.css('table.vertical-navbox').css('img')
+    end
+    if image_box == nil || image_box.length < 1
+      plainlinks_table = content_body.css('table.plainlinks')
+      next_element = plainlinks_table.next_element rescue nil
+      if next_element == nil
+        image_box = content_body.css('table.infobox').css('img')
+      else
+        image_box = next_element.css('img')
       end
     end
-    return summary_stripped
+    
+    return image_box != nil && image_box.length > 0 ? 'https:' + image_box.first['src'] : ''
+  end
+  
+  def get_summary(content_body)
+    # Case 1 where table exists before element (seems most common)
+    paragraphs = content_body.xpath(
+      '//p[
+        count(preceding-sibling::h2) = 0 and
+        count(following-sibling::h2) > 0 and
+        count(following-sibling::div) > 0
+      ]'
+    )
+    puts paragraphs
+    puts "*********************************"
+    summary = ""
+    # Case 2 where images exist
+    if paragraphs.length < 1
+      img_div = content_body.xpath('.//div[@class="thumb tright" or @class="thumb tmulti tright"]').first
+      # There are no images and no table preceding the text, so assume
+      # that the first paragraph elements we find contain the desired
+      # text. Grab until we exit a series of p's.
+      node = img_div == nil ? content_body.css('p').first : img_div
+      while node.name != "p" do
+        node = node.next_element
+      end
+      while node.name == "p" or node.name == "b" do
+        summary += node.text
+        node = node.next_element
+      end
+    else
+      paragraphs.each do |paragraph|
+        summary += paragraph.text
+      end
+    end
+  
+    return strip_citations(summary)
   end
 end
