@@ -121,8 +121,8 @@ class DatesController < ApplicationController
     content_body = dom.css('div.mw-body-content').css('div.mw-content-ltr')
     image_url = get_image_url(content_body)
     summary = get_summary(content_body)
+
     title = dom.css('h1.firstHeading').text
-    puts "*********************************"
     if title == nil || title.length < 1
       raise Error, 'Unable to find title in Wiki article: #{wiki_url}'
     end
@@ -144,8 +144,6 @@ class DatesController < ApplicationController
         raise Error, 'No summary text found'
       end
       
-      puts "SUMMARY: "
-      puts summary
       left_brackets = [];
       summary_len = summary.length
       idx = 0
@@ -185,44 +183,24 @@ class DatesController < ApplicationController
   end
   
   def get_image_url(content_body)
-    #table_infobox = nil
-    #if table_infobox == nil || table_infobox.length < 1
-    #  image_box = content_body.css('div.thumbinner').css('img').first ||
-    #    content_body.css('table.vertical-navbox').css('img').first
-    #  if image_box == nil
-    #    plainlinks_table = content_body.css('table.plainlinks')
-    #    next_element = plainlinks_table.next_element rescue nil
-    #    image_box = next_element == nil ? nil : next_element.css('img').first
-    #    if image_box == nil
-    #      table_infobox = content_body.css('table.infobox')
-    #      image_box = table_infobox.css('a.image')
-    #    end
-    #  end
-    #  
-    #  if image_box != nil
-    #    return 'https:' + image_box['src']
-    #  else
-    #    return ''
-    #  end
-    #end
-    #  
-    #image_box = table_infobox.css('a.image')
-    #return image_box.length < 1 ? '' : 'https:' + image_box.first.css('img')[0]['src']
-    image_box = content_body.css('div.thumbinner').css('img')
+    image_box = content_body.css('table.infobox').css('img')
     if image_box == nil || image_box.length < 1
-      image_box = content_body.css('table.vertical-navbox').css('img')
-    end
-    if image_box == nil || image_box.length < 1
-      plainlinks_table = content_body.css('table.plainlinks')
-      next_element = plainlinks_table.next_element rescue nil
-      if next_element == nil
-        image_box = content_body.css('table.infobox').css('img')
-      else
-        image_box = next_element.css('img')
+      image_box = content_body.css('div.thumbinner').css('img')
+      if image_box == nil || image_box.length < 1
+        image_box = content_body.css('table.vertical-navbox').css('img')
+        if image_box == nil || image_box.length < 1
+          plainlinks_table = content_body.css('table.plainlinks')
+          next_element = plainlinks_table.next_element rescue nil
+          if next_element != nil
+            image_box = next_element.css('img')
+          end
+        end
       end
     end
     
-    return image_box != nil && image_box.length > 0 ? 'https:' + image_box.first['src'] : ''
+    return image_box != nil && image_box.length > 0 \
+      ? 'https:' + image_box.first['src'] \
+      : ''
   end
   
   def get_summary(content_body)
@@ -234,26 +212,25 @@ class DatesController < ApplicationController
         count(following-sibling::div) > 0
       ]'
     )
-    puts paragraphs
-    puts "*********************************"
-    summary = ""
+    summary = ''
     # Case 2 where images exist
     if paragraphs.length < 1
-      img_div = content_body.xpath('.//div[@class="thumb tright" or @class="thumb tmulti tright"]').first
+      img_div = content_body.xpath(".//div[@class='thumb tright' or @class='thumb tmulti tright']").first
       # There are no images and no table preceding the text, so assume
       # that the first paragraph elements we find contain the desired
-      # text. Grab until we exit a series of p's.
+      # text. Grab until we exit a series of p tags.
       node = img_div == nil ? content_body.css('p').first : img_div
-      while node.name != "p" do
+      while node.name != 'p' do
         node = node.next_element
       end
-      while node.name == "p" or node.name == "b" do
+      while node.name == 'p' or node.name == 'b' do
         summary += node.text
         node = node.next_element
       end
     else
-      paragraphs.each do |paragraph|
-        summary += paragraph.text
+      idx = paragraphs.xpath("//span[@id='coordinates']").length > 0 ? 1 : 0
+      for idx in idx..paragraphs.length-1
+        summary += paragraphs[idx].text
       end
     end
   
