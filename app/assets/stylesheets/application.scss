@@ -38,3 +38,24 @@ textarea {
 .center h1 {
   margin-bottom: 10px;
 }
+
+img {
+  -webkit-transition: all 0.2s ease-in-out;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  display: block;
+  height: 150px;
+  line-height: 1.42857143;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+  padding: 4px;
+  transition: all 0.2s ease-in-out;
+  width: 150px;
+}
+
+a {
+  display: block;
+  text-align: center;
+}

@@ -1,29 +1,20 @@
-<nav class="navbar navbar-inverse navbar-fixed-top">
-  <div class="container">
-    <div class="navbar-header">
-      <b class="navbar-brand">Wiki Scraper</b>
-    </div>
-  </div>
-</nav>
-
 <div class="page-header">
   <h1>Pick a Date</h1>
 </div>
 <div>
-    <input type="text" id="datepicker-date" data-provide='datepicker' >
-    <button
-      type="button"
-      class="btn btn-info"
-      id="datepicker-button"
-      onclick="redirect()">
-      Pick a Date
-    </button>
+  <input type="text" id="datepicker-date" data-provide='datepicker' >
+  <button
+    type="button"
+    class="btn btn-info"
+    id="datepicker-button"
+    onclick="redirect()">
+    Pick a Date
+  </button>
 </div>
 <div class="page-header">
   <h1>Stored Dates</h1>
   <h5>In descending order.</h5>
 </div>
- 
 <table>
   <% @stored_dates.each do |day| %>
     <tr>
@@ -32,14 +23,14 @@
   <% end %>
 </table>
 <script>
-    function redirect() {
-      var date = $('#datepicker-date').datepicker().val();
-      if (date && date.length > 0) {
-        var res = date.split('/');
-        var date = res[2] + '-' + res[0] + '-' + res[1];
-        window.location.href = "http://localhost:3000/date/" + date;
-      } else {
-        alert('Choose a date');
-      }
+  function redirect() {
+    var date = $('#datepicker-date').datepicker().val();
+    if (date && date.length > 0) {
+      var res = date.split('/');
+      var date = res[2] + '-' + res[0] + '-' + res[1];
+      window.location.href = "http://localhost:3000/date/" + date;
+    } else {
+      alert('Choose a date');
     }
+  }
 </script>

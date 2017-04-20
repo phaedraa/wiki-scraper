@@ -1,15 +1,6 @@
-<nav class="navbar navbar-inverse navbar-fixed-top">
-  <div class="container">
-    <div class="navbar-header">
-      <b class="navbar-brand">Wiki Scraper</b>
-    </div>
-  </div>
-</nav>
-
 <div class="page-header">
   <h1><%= "All Wikipedia Logged Events for #{@event_date}" %></h1>
 </div>
-
 <div class="container-fluid">
  <% if @events_data.length == 0 %>
     <div class="alert alert-info" role="alert">
@@ -24,26 +15,24 @@
         <th class="col-xs-6">Summary</th>
         <th class="col-xs-3">Image</th>
       </thead>
-    <% @events_data.each do |event| %>
-      <tr>
-        <td><%= link_to event[:title], event[:wiki_url]%></td>
-        <td><%= event[:summary]%></td>
-        <td>
-          <% if event[:image_url].length > 0 %>
-            <%= link_to 'Source', event[:image_url]%>
-          <% end %>
-          <img
-            data-src="holder.js/400x400"
-            class="img-thumbnail"
-            alt="400x400"
-            style="width: 400px; height: 400px;"
-            src=<%= event[:image_url]%>
-            data-holder-rendered="true"
-          >
-        </td>
-      </tr>
-    <% end %>
+        <% @events_data.each do |event| %>
+          <tr>
+            <td><%= link_to event[:title], event[:wiki_url]%></td>
+            <td><%= event[:summary]%></td>
+            <td>
+              <% if event[:image_url].length > 0 %>
+                <%= link_to image_tag(event[:image_url]), event[:image_url]%>
+              <%else%>
+                <img
+                  data-src="holder.js/150x150?text=No Image Found"
+                  src=<%= event[:image_url]%>
+                  data-holder-rendered="true"
+                >
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    </div>
   <% end %>
-</table>
-</div>
 </div>

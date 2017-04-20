@@ -1,14 +1,14 @@
 class DatesController < ApplicationController
   require 'Date'
+  require 'Event'
   require 'nokogiri'
   require 'open-uri'
   require 'URI'
-  require 'Event'
   
   def show_date_events
     day = Date.parse(params[:date])
     @event_date = day.strftime('%B %d, %Y')
-    delete_data(day)
+    #delete_data(day)
     events = WikiDate.where(:day => day)
     if events.length == 0
       fetch_and_store_date_events(day)
@@ -50,7 +50,6 @@ class DatesController < ApplicationController
     
     data_to_log = get_data_to_log(date_url, date_div_id)
     log_new_events_data(data_to_log, date)
-    #day = date.strftime('%s')
   end
 
   def log_new_events_data(data_to_log, date)
@@ -204,7 +203,7 @@ class DatesController < ApplicationController
   end
   
   def get_summary(content_body)
-    # Case 1 where table exists before element (seems most common)
+    # Case 1 where paragrapths exist before the h2 tag (seems most common)
     paragraphs = content_body.xpath(
       '//p[
         count(preceding-sibling::h2) = 0 and
@@ -228,7 +227,11 @@ class DatesController < ApplicationController
         node = node.next_element
       end
     else
-      idx = paragraphs.xpath("//span[@id='coordinates']").length > 0 ? 1 : 0
+      # If wiki page maps to an entity that has a physical and permanent location,
+      # coordiantes will often be embedded within the first p tag.
+      coordinates_span = paragraphs.xpath("//span[@id='coordinates']")
+      idx = coordinates_span.length > 0 &&
+        (coordinates_span.first.path.include? "p[1]/span") ? 1 : 0
       for idx in idx..paragraphs.length-1
         summary += paragraphs[idx].text
       end
