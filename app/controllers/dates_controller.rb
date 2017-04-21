@@ -8,7 +8,6 @@ class DatesController < ApplicationController
   def show_date_events
     day = Date.parse(params[:date])
     @event_date = day.strftime('%B %d, %Y')
-    delete_data(day)
     @events_data = query_events_data(day)
   end
 
@@ -30,20 +29,6 @@ class DatesController < ApplicationController
 
   def index
     @stored_dates = WikiDate.uniq.pluck(:day).sort
-  end
-
-  def delete_data(date)
-    events = WikiDate.where(:day => date)
-    titles = events.map{|row| row.event}
-    events_data = Event.where(title: titles)
-    events_data.each do |delete_event|
-      Event.find(delete_event[:id]).destroy
-    end
-
-    temp_delete = WikiDate.where(day: date)
-    temp_delete.each do |delete_event|
-      WikiDate.find(delete_event[:id]).destroy
-    end
   end
 
   def fetch_and_store_date_events(date)
