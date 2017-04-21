@@ -8,14 +8,24 @@ class DatesController < ApplicationController
   def show_date_events
     day = Date.parse(params[:date])
     @event_date = day.strftime('%B %d, %Y')
-    #delete_data(day)
-    events = WikiDate.where(:day => day)
-    if events.length == 0
-      fetch_and_store_date_events(day)
-      events = WikiDate.where(:day => day)
-    end
+    delete_data(day)
+    @events_data = query_events_data(day)
+  end
+
+  def query_events_data(day)
+    events = get_events(day)
     titles = events.map{|row| row.event}
-    @events_data = Event.where(title: titles)
+    return Event.where(title: titles)
+  end
+
+  def get_events(day)
+    events = WikiDate.where(:day => day)
+    if events.length > 0
+      return events
+    end
+
+    fetch_and_store_date_events(day)
+    return WikiDate.where(:day => day)
   end
 
   def index
@@ -204,7 +214,7 @@ class DatesController < ApplicationController
   end
   
   def get_summary(content_body)
-    # Case 1 where paragrapths exist before the h2 tag (seems most common)
+    # Case 1 where paragraphs exist before the first h2 tag (seems most common)
     paragraphs = content_body.xpath(
       '//p[
         count(preceding-sibling::h2) = 0 and
@@ -213,10 +223,12 @@ class DatesController < ApplicationController
       ]'
     )
     summary = ''
-    # Case 2 where images exist
+    # Case 2
     if paragraphs.length < 1
-      img_div = content_body.xpath(".//div[@class='thumb tright' or @class='thumb tmulti tright']").first
-      # There are no images and no table preceding the text, so assume
+      img_div = content_body.xpath(
+        ".//div[@class='thumb tright' or @class='thumb tmulti tright']"
+      ).first
+      # There are paragraph tags before the first h2 tag. Assume
       # that the first paragraph elements we find contain the desired
       # text. Grab until we exit a series of p tags.
       node = img_div == nil ? content_body.css('p').first : img_div
