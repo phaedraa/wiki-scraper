@@ -19,7 +19,7 @@ class DatesController < ApplicationController
   end
 
   def index
-    @stored_dates = WikiDate.uniq.pluck(:day).sort{|row| row.day}
+    @stored_dates = WikiDate.uniq.pluck(:day).sort
   end
 
   def delete_data(date)
@@ -90,7 +90,7 @@ class DatesController < ApplicationController
     events.each do |event|
       article_anchor = event.css('a')[0]
       if article_anchor != nil
-        # article_anchor_url is of format 'wiki/SOME_NAME'
+        # article_anchor url is of format 'wiki/SOME_NAME'
         wiki_url = "https://en.wikipedia.org#{article_anchor['href']}"
         dom = get_dom(wiki_url)
         if dom != nil
@@ -137,7 +137,8 @@ class DatesController < ApplicationController
   # This function accomplishes two primary feats:
   # 1) Balancing the brackets such that we don't have lone brackets
   # 2) If a balanced bracket pair exists, and it's content is a
-  #    digit between 1-4 characters, then it will be excluded
+  #    word + a digit between 1-4 characters or just a digit of this length,
+  #    then it will be excluded as it's a citation
   def strip_citations(summary)
       if summary.length < 1
         raise Error, 'No summary text found'
@@ -228,7 +229,8 @@ class DatesController < ApplicationController
       end
     else
       # If wiki page maps to an entity that has a physical and permanent location,
-      # coordiantes will often be embedded within the first p tag.
+      # coordiantes will often be embedded within the first p tag, so we need
+      # to exclude them
       coordinates_span = paragraphs.xpath("//span[@id='coordinates']")
       idx = coordinates_span.length > 0 &&
         (coordinates_span.first.path.include? "p[1]/span") ? 1 : 0
