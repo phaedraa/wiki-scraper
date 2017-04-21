@@ -5,11 +5,15 @@
   <input type="text" id="datepicker-date" data-provide='datepicker' >
   <button
     type="button"
-    class="btn btn-info"
+    class="btn-info"
     id="datepicker-button"
+    data-dismiss="alert"
     onclick="redirect()">
     Pick a Date
   </button>
+</div>
+<div class="alert hide alert-danger" role="alert" id="alert-user">
+  <strong>Oh snap! Looks like you need to pick a date first!</strong>
 </div>
 <div class="page-header">
   <h1>Stored Dates</h1>
@@ -30,7 +34,7 @@
       var date = res[2] + '-' + res[0] + '-' + res[1];
       window.location.href = "http://localhost:3000/date/" + date;
     } else {
-      alert('Choose a date');
+      document.getElementById("alert-user").classList.toggle('hide')
     }
   }
 </script>
