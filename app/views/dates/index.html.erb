@@ -34,7 +34,11 @@
       var date = res[2] + '-' + res[0] + '-' + res[1];
       window.location.href = "http://localhost:3000/date/" + date;
     } else {
-      document.getElementById("alert-user").classList.toggle('hide')
+      $('#alert-user').removeClass('hide');
+      setTimeout(
+        function() { $('#alert-user').addClass('hide'); },
+        10000
+      );
     }
   }
 </script>
