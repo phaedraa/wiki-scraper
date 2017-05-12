@@ -1,4 +1,8 @@
-# Rails Interview Project
+# My first time with Rails...
+.
+.
+.
+# Rails Project
 
 Option 1 (Cloud 9):
 
@@ -11,8 +15,8 @@ Option 2 (clone to your own computer):
 2. `brew install rbenv`
 3. `rbenv install`
 4. `gem install bundler`
-5. `git clone git@github.com:clutter/clutter-interview-rails-current-events.git`
-6. `cd clutter-interview-rails-current-events`
+5. `git clone git@github.com:phaedraa/wiki-scraper.git`
+6. `cd wiki-scraper`
 
 That should get you up and running, to run your local server run `rails s` in your terminal, with default settings that will let you access your app at `localhost:3000`
 
